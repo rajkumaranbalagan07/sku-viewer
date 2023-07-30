@@ -2,21 +2,26 @@
 
 import { GetServerSideProps } from 'next';
 
-interface SkuProps {
-  sku: {
-    sku: string;
-    qty: number;
-  };
+interface SkuData {
+  sku: string;
+  qty: number;
 }
 
-export default function SkuPage({ sku }: SkuProps) {
+const SkuPage: React.FC<{ sku: string | SkuData }> = ({ sku }) => {
+  if (typeof sku === 'string') {
+    return <div>{sku}</div>;
+  }
+
   return (
     <div>
-      <h1>SKU: {sku.sku}</h1>
+      <h1>SKU Details</h1>
+      <h2>SKU: {sku.sku}</h2>
       <p>Quantity: {sku.qty}</p>
     </div>
   );
-}
+};
+
+export default SkuPage;
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const skuId = context.params?.sku as string;
@@ -36,16 +41,14 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   );
 
   if (!res.ok) {
-    throw new Error('Network response was not ok');
+    return {
+      props: {
+        sku: 'SKU not found',
+      },
+    };
   }
 
   const sku = await res.json();
-
-  if (!sku) {
-    return {
-      notFound: true,
-    };
-  }
 
   return {
     props: {
